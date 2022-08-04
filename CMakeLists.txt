@@ -575,6 +575,7 @@ add_subdirectory (src)
 add_subdirectory (programs)
 add_subdirectory (tests)
 add_subdirectory (utils)
+add_subdirectory (chistadata)
 
 include (cmake/sanitize_target_link_libraries.cmake)
 
