@@ -1,0 +1,2 @@
+clickhouse_add_executable(cd_create_parser cd_create_parser.cpp)
+target_link_libraries(cd_create_parser PRIVATE clickhouse_parsers)

@@ -1,1 +1,0 @@
-clickhouse_add_executable(chistadata_test main.cpp)
