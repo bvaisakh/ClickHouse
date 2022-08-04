@@ -12,6 +12,9 @@
 #include <IO/WriteHelpers.h>
 #include <IO/WriteBufferFromString.h>
 #include <IO/Operators.h>
+#ifndef ENABLE_CHISTADATA
+#include <Parsers/ParserTrace.h>
+#endif
 
 
 namespace DB
@@ -357,6 +360,10 @@ ASTPtr parseQuery(
     size_t max_query_size,
     size_t max_parser_depth)
 {
+#ifndef ENABLE_CHISTADATA
+    ParserTrace::Trace("Test Data from ChistaData..");
+#endif
+
     return parseQueryAndMovePosition(parser, begin, end, query_description, false, max_query_size, max_parser_depth);
 }
 
