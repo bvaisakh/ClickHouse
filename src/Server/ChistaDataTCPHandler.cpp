@@ -1,3 +1,5 @@
+#include "ChistaDataTCPHandler.h"
+
 #include <algorithm>
 #include <cstring>
 #include <iomanip>
@@ -51,9 +53,8 @@
 #include <Processors/Executors/PushingPipelineExecutor.h>
 #include <Processors/Sinks/SinkToStorage.h>
 
-#include "ChistaDataTCPHandler.h"
-#include "Core/Protocol.h"
 #include "TCPHandler.h"
+#include "Core/Protocol.h"
 
 #include <Common/config_version.h>
 
@@ -88,12 +89,14 @@ ChistaDataTCPHandler::ChistaDataTCPHandler(
     TCPServer & tcp_server_,
     const Poco::Net::StreamSocket & socket_,
     bool parse_proxy_protocol_,
-    std::string server_display_name_)
+    std::string server_display_name_,
+    ChistaDataTCPProxyClient proxyClient_)
     : Poco::Net::TCPServerConnection(socket_)
     , server(server_)
     , tcp_server(tcp_server_)
     , parse_proxy_protocol(parse_proxy_protocol_)
     , log(&Poco::Logger::get("ChistaDataTCPHandler"))
+    , proxyClient(proxyClient_)
     , server_display_name(std::move(server_display_name_))
 {
 }
@@ -347,6 +350,10 @@ void ChistaDataTCPHandler::runImpl()
                     sendMergeTreeReadTaskRequestAssumeLocked(std::move(request));
                     return receivePartitionMergeTreeReadTaskResponseAssumeLocked();
                 });
+
+            // Forwarding when working as a proxy
+            LOG_DEBUG(log, "::runImpl: state.query: {}", state.query);
+            proxyClient.sendMessage(state.query);
 
             /// Processing Query
             state.io = executeQuery(state.query, query_context, false, state.stage);

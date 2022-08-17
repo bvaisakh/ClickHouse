@@ -19,6 +19,7 @@ private:
     bool parse_proxy_protocol = false;
     Poco::Logger * log;
     std::string server_display_name;
+    ChistaDataTCPProxyClient proxyClient;
 
     class DummyTCPHandler : public Poco::Net::TCPServerConnection
     {
@@ -28,10 +29,15 @@ private:
     };
 
 public:
-    ChistaDataTCPHandlerFactory(IServer & server_, bool secure_, bool parse_proxy_protocol_)
+    ChistaDataTCPHandlerFactory(
+        IServer & server_,
+        bool secure_,
+        bool parse_proxy_protocol_,
+        ChistaDataTCPProxyClient proxyClient_)
         : server(server_)
         , parse_proxy_protocol(parse_proxy_protocol_)
         , log(&Poco::Logger::get(std::string("ChistaDataTCP") + (secure_ ? "S" : "") + "HandlerFactory"))
+        , proxyClient(proxyClient_)
     {
         LOG_TRACE(log, "CHISTADATA: in ChistaDataTCPHandlerFactory constructor");
         server_display_name = "CHISTADATA";
@@ -42,7 +48,7 @@ public:
         try
         {
             LOG_TRACE(log, "CHISTADATA: TCP Request. Address: {}", socket.peerAddress().toString());
-            return new ChistaDataTCPHandler(server, tcp_server, socket, parse_proxy_protocol, server_display_name);
+            return new ChistaDataTCPHandler(server, tcp_server, socket, parse_proxy_protocol, server_display_name, proxyClient);
         }
         catch (const Poco::Net::NetException &)
         {

@@ -1899,7 +1899,11 @@ void Server::createServers(
                 port_name,
                 "native protocol (tcp): " + address.toString(),
                 std::make_unique<TCPServer>(
-                    new ChistaDataTCPHandlerFactory(*this, /* secure */ false, /* proxy protocol */ false),
+                    new ChistaDataTCPHandlerFactory(
+                        *this,
+                        /* secure */ false,
+                        /* proxy protocol */ false,
+                        ChistaDataTCPProxyClient("127.0.0.1", 8007)),
                     server_pool,
                     socket,
                     new Poco::Net::TCPServerParams));

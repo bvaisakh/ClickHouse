@@ -24,6 +24,7 @@
 #include "IServer.h"
 #include "TCPHandler.h"
 #include "base/types.h"
+#include "ChistaDataTCPProxyClient.h"
 
 
 namespace CurrentMetrics
@@ -143,7 +144,8 @@ public:
         TCPServer & tcp_server_,
         const Poco::Net::StreamSocket & socket_,
         bool parse_proxy_protocol_,
-        std::string server_display_name_);
+        std::string server_display_name_,
+        ChistaDataTCPProxyClient proxyClient_);
     ~ChistaDataTCPHandler() override;
 
     void run() override;
@@ -156,6 +158,7 @@ private:
     TCPServer & tcp_server;
     bool parse_proxy_protocol = false;
     Poco::Logger * log;
+    ChistaDataTCPProxyClient proxyClient;
 
     String forwarded_for;
 
