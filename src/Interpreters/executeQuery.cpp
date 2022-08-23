@@ -396,8 +396,10 @@ static std::tuple<ASTPtr, BlockIO> executeQueryImpl(
     String query_table;
     try
     {
+        // [VAI] Constructs the parser
         ParserQuery parser(end, settings.allow_settings_after_format_in_insert);
 
+        // [VAI] Query parsing happens here - converts the query to an AST
         /// TODO: parser should fail early when max_query_size limit is reached.
         ast = parseQuery(parser, begin, end, "", max_query_size, settings.max_parser_depth);
 
@@ -645,6 +647,7 @@ static std::tuple<ASTPtr, BlockIO> executeQueryImpl(
                 }
             }
 
+            // [VAI] Generate  an interpreter instance
             interpreter = InterpreterFactory::get(ast, context, SelectQueryOptions(stage).setInternal(internal));
 
             if (context->getCurrentTransaction() && !interpreter->supportsTransactions() &&
@@ -691,6 +694,7 @@ static std::tuple<ASTPtr, BlockIO> executeQueryImpl(
                     std::string class_name(demangle(typeid(*raw_interpreter_ptr).name()));
                     span = std::make_unique<OpenTelemetrySpanHolder>(class_name + "::execute()");
                 }
+                // [VAI] Interpreter parses the AST and creates query plan and pipeline
                 res = interpreter->execute();
             }
         }
@@ -1079,6 +1083,7 @@ static std::tuple<ASTPtr, BlockIO> executeQueryImpl(
         throw;
     }
 
+    // [VAI] The return result is a binary group of AST and result after parsing AST
     return std::make_tuple(ast, std::move(res));
 }
 

@@ -118,6 +118,7 @@ std::unique_ptr<IInterpreter> InterpreterFactory::get(ASTPtr & query, ContextMut
 
     ProfileEvents::increment(ProfileEvents::Query);
 
+    // [VAI] What is happending here?
     if (query->as<ASTSelectQuery>())
     {
         /// This is internal part of ASTSelectWithUnionQuery.

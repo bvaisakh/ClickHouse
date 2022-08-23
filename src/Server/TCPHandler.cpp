@@ -351,12 +351,17 @@ void TCPHandler::runImpl()
                 return receivePartitionMergeTreeReadTaskResponseAssumeLocked();
             });
 
+            // [VAI] executes the query and creates a BlockIO
+            // [VAI] BlockIO is streams of blocks, that are processing the query
+            // [VAI] BlockIO corresponding to the query is stored in state.io
             /// Processing Query
             state.io = executeQuery(state.query, query_context, false, state.stage);
 
             after_check_cancelled.restart();
             after_send_progress.restart();
 
+            // [VAI] Based on the pipeline (whether it is pushing, pulling or completed)
+            // [VAI] It is executed here
             if (state.io.pipeline.pushing())
             /// FIXME: check explicitly that insert query suggests to receive data via native protocol,
             {
@@ -677,8 +682,10 @@ void TCPHandler::processInsertQuery()
 
         sendLogs();
 
-        while (readDataNext())
+        while (readDataNext()) {
+            // [VAI] Pipeline exeuction happens here with push
             executor.push(std::move(state.block_for_insert));
+        }
 
         executor.finish();
     };
@@ -698,6 +705,7 @@ void TCPHandler::processInsertQuery()
 }
 
 
+// [VAI] Processes BlockIO of pulling queries (SELECT)
 void TCPHandler::processOrdinaryQueryWithProcessors()
 {
     auto & pipeline = state.io.pipeline;
@@ -718,6 +726,7 @@ void TCPHandler::processOrdinaryQueryWithProcessors()
         CurrentMetrics::Increment query_thread_metric_increment{CurrentMetrics::QueryThread};
 
         Block block;
+        // [VAI] Pipeline execution happens with pull
         while (executor.pull(block, interactive_delay / 1000))
         {
             std::unique_lock lock(task_callback_mutex);

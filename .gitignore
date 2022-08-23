@@ -149,3 +149,12 @@ website/package-lock.json
 /programs/server/metadata
 /programs/server/store
 
+access/
+coordination/
+data/
+metadata/
+preprocessed_configs/
+store/
+uuid
+
+/status

@@ -562,6 +562,7 @@ QueryPipeline QueryPipelineBuilder::getPipeline(QueryPipelineBuilder builder)
 {
     QueryPipeline res(std::move(builder.pipe));
     res.addResources(std::move(builder.resources));
+    // [VAI] Setting number of threads
     res.setNumThreads(builder.getNumThreads());
     res.setProcessListElement(builder.process_list_element);
     return res;

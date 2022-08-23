@@ -480,6 +480,7 @@ InterpreterSelectQuery::InterpreterSelectQuery(
     joined_tables.rewriteDistributedInAndJoins(query_ptr);
 
     max_streams = settings.max_threads;
+    // [VAI] Obtain the AST
     ASTSelectQuery & query = getSelectQuery();
     std::shared_ptr<TableJoin> table_join = joined_tables.makeTableJoin(query);
 
@@ -556,6 +557,7 @@ InterpreterSelectQuery::InterpreterSelectQuery(
                 ASTSelectQuery::Expression::WHERE, makeASTFunction("and", query.prewhere()->clone(), query.where()->clone()));
         }
 
+        // [VAI] Each query corresponds to a unique expression analyzer for scraping AST to generate an execution plan (operation chain)
         query_analyzer = std::make_unique<SelectQueryExpressionAnalyzer>(
             query_ptr,
             syntax_analyzer_result,
@@ -731,18 +733,23 @@ void InterpreterSelectQuery::buildQueryPlan(QueryPlan & query_plan)
         query_plan.addStorageHolder(storage);
 }
 
+// [VAI] Execute method for select query
 BlockIO InterpreterSelectQuery::execute()
 {
     BlockIO res;
     QueryPlan query_plan;
 
+    // [VAI] builds the query plan
     buildQueryPlan(query_plan);
 
+    // [VAI] gets the pipeline builder
     auto builder = query_plan.buildQueryPipeline(
         QueryPlanOptimizationSettings::fromContext(context), BuildQueryPipelineSettings::fromContext(context));
 
+    // [VAI] Creates the pipeline
     res.pipeline = QueryPipelineBuilder::getPipeline(std::move(*builder));
 
+    // [VAI] Assigns resources to the pipeline
     setQuota(res.pipeline);
 
     return res;
@@ -1276,6 +1283,7 @@ void InterpreterSelectQuery::executeImpl(QueryPlan & query_plan, std::optional<P
         if (options.to_stage >= QueryProcessingStage::WithMergeableStateAfterAggregation)
             to_aggregation_stage = true;
 
+        // [VAI] Read data from the storage
         /// Read the data from Storage. from_stage - to what stage the request was completed in Storage.
         executeFetchColumns(from_stage, query_plan);
 
@@ -1302,6 +1310,7 @@ void InterpreterSelectQuery::executeImpl(QueryPlan & query_plan, std::optional<P
                 && !expressions.hasHaving()
                 && !expressions.has_window)
             {
+                // [VAI] Adding order by step to the query plan
                 if (expressions.has_order_by)
                     executeOrder(query_plan, input_order_info_for_order);
 
@@ -1312,6 +1321,7 @@ void InterpreterSelectQuery::executeImpl(QueryPlan & query_plan, std::optional<P
                 if (query.limitLength())
                     executeDistinct(query_plan, false, expressions.selected_columns, false);
 
+                // [VAI] Adding limitBy execution step to queryplan
                 if (expressions.hasLimitBy())
                 {
                     executeExpression(query_plan, expressions.before_limit_by, "Before LIMIT BY");
@@ -1403,6 +1413,7 @@ void InterpreterSelectQuery::executeImpl(QueryPlan & query_plan, std::optional<P
                 query_plan.addStep(std::move(convert_join_step));
             }
 
+            // [VAI] Handling joins here
             if (expressions.hasJoin())
             {
                 if (expressions.join->isFilled())
