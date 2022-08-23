@@ -1,0 +1,1 @@
+clickhouse_add_executable(cd_hello_world hello_world.cpp)
